@@ -1,0 +1,43 @@
+name: Package ID Validation
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/scraper.py'
+      - 'src/set_package_ids.py'
+
+jobs:
+  validate-package-ids:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Test package ID finder
+      run: |
+        python src/find_package_ids.py || echo "Package ID finder completed (some IDs may not be found)"
+      continue-on-error: true
+    
+    - name: Validate package ID setup script
+      run: |
+        python -c "
+        import sys
+        sys.path.insert(0, 'src')
+        from set_package_ids import verify_package_id, update_scraper_file
+        print('✓ Package ID setup script imports successfully')
+        "
+

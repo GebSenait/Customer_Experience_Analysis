@@ -1,0 +1,60 @@
+name: Documentation Check
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'README.md'
+      - '*.md'
+      - 'src/*.py'
+
+jobs:
+  check-documentation:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Check README exists
+      run: |
+        test -f README.md || exit 1
+        echo "✓ README.md exists"
+    
+    - name: Validate README structure
+      run: |
+        python -c "
+        with open('README.md', 'r', encoding='utf-8') as f:
+            content = f.read()
+            assert '## Installation' in content, 'Installation section missing'
+            assert '## Usage' in content, 'Usage section missing'
+            assert 'requirements.txt' in content, 'requirements.txt not mentioned'
+        print('✓ README structure is valid')
+        "
+    
+    - name: Check for code documentation
+      run: |
+        python -c "
+        import os
+        import re
+        
+        src_files = [f for f in os.listdir('src') if f.endswith('.py')]
+        for file in src_files:
+            with open(f'src/{file}', 'r', encoding='utf-8') as f:
+                content = f.read()
+                # Check for module docstring
+                if not content.strip().startswith('\"\"\"') and not content.strip().startswith(\"'''\"):
+                    print(f'⚠ {file} may be missing module docstring')
+                # Check for class docstrings
+                classes = re.findall(r'class\s+\w+', content)
+                for cls in classes:
+                    cls_name = cls.split()[1]
+                    if f'class {cls_name}:' in content:
+                        # Check if docstring follows
+                        pattern = f'class {cls_name}:[\\s\\n]+\"\"\"'
+                        if not re.search(pattern, content):
+                            print(f'⚠ {cls_name} class may be missing docstring')
+        print('✓ Documentation check completed')
+        "
+      continue-on-error: true
+

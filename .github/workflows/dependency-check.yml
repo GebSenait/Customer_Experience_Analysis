@@ -1,0 +1,52 @@
+name: Dependency Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Check weekly on Mondays
+    - cron: '0 0 * * 1'
+
+jobs:
+  check-dependencies:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+    
+    - name: Check for security vulnerabilities
+      run: |
+        python -m pip install --upgrade pip
+        pip install safety
+        pip install -r requirements.txt
+        safety check --file requirements.txt || echo "⚠ Some dependencies may have known vulnerabilities"
+      continue-on-error: true
+    
+    - name: Validate requirements.txt format
+      run: |
+        python -c "
+        with open('requirements.txt', 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                line = line.strip()
+                if line and not line.startswith('#'):
+                    assert '==' in line or '>=' in line or '<=' in line, f'Invalid requirement format: {line}'
+        print('✓ requirements.txt format is valid')
+        "
+    
+    - name: Test dependency installation
+      run: |
+        python -m venv test_env
+        source test_env/bin/activate || . test_env/bin/activate
+        pip install -r requirements.txt
+        python -c "import pandas; import numpy; from google_play_scraper import app; print('✓ All dependencies installed successfully')"
+

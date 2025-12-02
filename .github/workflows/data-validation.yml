@@ -1,0 +1,59 @@
+name: Data Validation
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  validate-data-quality:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Validate preprocessing pipeline
+      run: |
+        python -c "
+        import sys
+        sys.path.insert(0, 'src')
+        from preprocessor import DataPreprocessor
+        import os
+        
+        # Check if preprocessor can be instantiated
+        preprocessor = DataPreprocessor()
+        print('✓ Preprocessor initialized successfully')
+        
+        # Validate KPI validation function exists
+        assert hasattr(preprocessor, 'validate_kpis'), 'validate_kpis method missing'
+        assert hasattr(preprocessor, 'preprocess'), 'preprocess method missing'
+        print('✓ All required methods present')
+        "
+    
+    - name: Validate scraper configuration
+      run: |
+        python -c "
+        import sys
+        sys.path.insert(0, 'src')
+        from scraper import PlayStoreScraper
+        
+        scraper = PlayStoreScraper()
+        assert 'CBE' in scraper.APP_CONFIGS, 'CBE config missing'
+        assert 'BOA' in scraper.APP_CONFIGS, 'BOA config missing'
+        assert 'Dashen' in scraper.APP_CONFIGS, 'Dashen config missing'
+        print('✓ All bank configurations present')
+        "
+
