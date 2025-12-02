@@ -24,3 +24,6 @@ vaderSentiment==3.3.2
 textblob==0.17.1
 nltk==3.8.1
 
+# Database (Task 3)
+psycopg2-binary==2.9.9
+
