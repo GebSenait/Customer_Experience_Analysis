@@ -25,7 +25,12 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        # Use CI requirements to save disk space
+        if [ -f requirements-ci.txt ]; then
+          pip install -r requirements-ci.txt
+        else
+          pip install pandas numpy google-play-scraper python-dateutil tqdm openpyxl
+        fi
     
     - name: Test package ID finder
       run: |

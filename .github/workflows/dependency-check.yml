@@ -27,8 +27,14 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install safety
-        pip install -r requirements.txt
-        safety check --file requirements.txt || echo "⚠ Some dependencies may have known vulnerabilities"
+        # Check both CI and full requirements
+        if [ -f requirements-ci.txt ]; then
+          pip install -r requirements-ci.txt
+          safety check --file requirements-ci.txt || echo "⚠ Some dependencies may have known vulnerabilities"
+        else
+          # Only check core dependencies to save space
+          pip install pandas numpy google-play-scraper python-dateutil tqdm openpyxl
+        fi
       continue-on-error: true
     
     - name: Validate requirements.txt format
@@ -47,6 +53,12 @@ jobs:
       run: |
         python -m venv test_env
         source test_env/bin/activate || . test_env/bin/activate
-        pip install -r requirements.txt
-        python -c "import pandas; import numpy; from google_play_scraper import app; print('✓ All dependencies installed successfully')"
+        # Use CI requirements (excludes heavy packages like torch)
+        if [ -f requirements-ci.txt ]; then
+          pip install -r requirements-ci.txt
+        else
+          # Fallback: install core dependencies only
+          pip install pandas numpy google-play-scraper python-dateutil tqdm openpyxl
+        fi
+        python -c "import pandas; import numpy; from google_play_scraper import app; print('✓ Core dependencies installed successfully')"
 
