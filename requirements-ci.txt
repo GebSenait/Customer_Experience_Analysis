@@ -1,0 +1,21 @@
+# Core dependencies for CI/testing (lightweight)
+# Full requirements in requirements.txt
+
+# Data Collection
+google-play-scraper==0.1.2
+
+# Data Processing
+pandas==2.1.4
+numpy==1.26.2
+
+# Utilities
+python-dateutil==2.8.2
+tqdm==4.66.1
+
+# Data Quality
+openpyxl==3.1.2
+
+# Note: NLP dependencies (torch, transformers, spacy) are excluded from CI
+# to save disk space. They are required for Task 2 runtime but not for CI checks.
+# Install full requirements locally: pip install -r requirements.txt
+

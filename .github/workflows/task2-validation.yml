@@ -1,0 +1,65 @@
+name: Task 2 Validation (Optional - Full Dependencies)
+
+on:
+  workflow_dispatch:  # Manual trigger only
+  push:
+    branches: [ task-2-sentiment-analysis ]
+    paths:
+      - 'src/task2_main.py'
+      - 'src/sentiment_analyzer.py'
+      - 'src/thematic_analyzer.py'
+      - 'requirements.txt'
+
+jobs:
+  validate-task2:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+    
+    - name: Free disk space
+      run: |
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /usr/local/share/boost
+        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+        df -h
+    
+    - name: Install core dependencies first
+      run: |
+        python -m pip install --upgrade pip
+        pip install --no-cache-dir pandas numpy scikit-learn nltk vaderSentiment textblob
+    
+    - name: Install torch (CPU only, no cache)
+      run: |
+        pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+    
+    - name: Install transformers and spacy
+      run: |
+        pip install --no-cache-dir transformers==4.36.2 spacy==3.7.2
+    
+    - name: Download spaCy model
+      run: |
+        python -m spacy download en_core_web_sm || echo "spaCy model download failed (may need manual download)"
+      continue-on-error: true
+    
+    - name: Validate Task 2 code structure
+      run: |
+        python -c "
+        import sys
+        sys.path.insert(0, 'src')
+        from sentiment_analyzer import SentimentAnalyzer
+        from thematic_analyzer import ThematicAnalyzer
+        from nlp_pipeline import NLPipeline
+        from task2_main import Task2Pipeline
+        print('✓ All Task 2 modules imported successfully')
+        "
+      continue-on-error: true
+
