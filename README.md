@@ -1,4 +1,4 @@
-# Customer Experience Analysis - Task 1: Data Collection & Preprocessing
+# Customer Experience Analysis - Banking App Reviews
 
 ## Project Overview
 
@@ -7,34 +7,158 @@ This project is part of Omega Consultancy's analysis pipeline for enhancing user
 - **Bank of Abyssinia (BOA)**
 - **Dashen Bank**
 
-## Objective
+The pipeline collects, analyzes, and stores Google Play Store reviews to extract actionable insights for improving customer experience.
 
-Collect, clean, and prepare Google Play Store review data to support downstream analysis including:
-- Sentiment analysis
-- Theme extraction
-- Complaint clustering
-- User retention insights
-- Feature improvement recommendations
+---
+
+## Project Status
+
+### ✅ Task 1: Data Collection & Preprocessing - **COMPLETED**
+
+**Objective**: Collect and clean Google Play Store review data
+
+**Implementation**:
+- Automated scraper using `google-play-scraper` library
+- Data preprocessing with duplicate removal, normalization, and validation
+- Package ID finder and manual setup tools
+
+**Key Results**:
+- ✅ **Total Reviews**: ≥1,200 reviews collected
+- ✅ **Data Quality**: <5% missing values
+- ✅ **Per Bank**: ≥400 reviews per bank
+- ✅ **Output**: Clean, analysis-ready CSV datasets
+
+**Key Files**:
+- `src/scraper.py` - Google Play Store review scraper
+- `src/preprocessor.py` - Data cleaning and preprocessing
+- `src/main.py` - Main execution script
+
+**Output**:
+- Raw data: `data/raw/reviews_raw_YYYYMMDD_HHMMSS.json`
+- Processed data: `data/processed/reviews_cleaned_YYYYMMDD_HHMMSS.csv`
+
+**Insights**:
+- Standardized data format across all three banks
+- High data quality with minimal missing values
+- Ready for downstream NLP and sentiment analysis
+
+---
+
+### ✅ Task 2: Sentiment & Thematic Analysis - **COMPLETED**
+
+**Objective**: Analyze sentiment and identify themes in customer reviews
+
+**Implementation**:
+- Sentiment analysis using DistilBERT model (HuggingFace)
+- Thematic analysis with TF-IDF and keyword extraction
+- NLP pipeline with spaCy and NLTK
+- Optional comparison models (VADER, TextBlob)
+
+**Key Results**:
+- ✅ **Sentiment Scores**: Computed for ≥90% of reviews
+- ✅ **Themes Identified**: ≥3 themes per bank
+- ✅ **Analysis Coverage**: ≥400 reviews analyzed
+- ✅ **Output**: Sentiment labels, scores, and identified themes
+
+**Key Files**:
+- `src/sentiment_analyzer.py` - Sentiment analysis engine
+- `src/thematic_analyzer.py` - Theme identification
+- `src/nlp_pipeline.py` - Text processing pipeline
+- `src/task2_main.py` - Main execution script
+
+**Output**:
+- Analyzed data: `data/analyzed/sentiment_thematic_analysis_YYYYMMDD_HHMMSS.csv`
+- Themes: `data/analyzed/themes_YYYYMMDD_HHMMSS.json`
+- Insights: `data/analyzed/sentiment_insights_YYYYMMDD_HHMMSS.json`
+
+**Insights**:
+- Sentiment distribution across banks and ratings
+- Common themes: Account Access, Transaction Speed, UI/UX, Customer Support
+- Sentiment trends by bank and rating category
+- Actionable themes for improvement prioritization
+
+---
+
+### ✅ Task 3: PostgreSQL Database Setup & ETL - **COMPLETED**
+
+**Objective**: Create PostgreSQL database and ETL pipeline for review data storage
+
+**Implementation**:
+- PostgreSQL database setup with relational schema
+- ETL pipeline with batch processing
+- Data validation and integrity checks
+- Comprehensive documentation
+
+**Key Results**:
+- ✅ **Database Connection**: Fully working PostgreSQL connection & ETL script
+- ✅ **Data Population**: Supports ≥1,000 review entries (minimum: ≥400)
+- ✅ **Schema**: SQL schema file committed to repository
+- ✅ **Documentation**: Complete schema documentation in README
+
+**Key Files**:
+- `database/schema.sql` - Database schema definition
+- `src/database_setup.py` - Database creation and setup
+- `src/database_etl.py` - ETL pipeline with batch inserts
+- `src/task3_main.py` - Main orchestration script
+- `database/validation_queries.sql` - Data integrity queries
+
+**Database Schema**:
+- **Banks Table**: bank_id (PK), bank_name, app_name, timestamps
+- **Reviews Table**: review_id (PK), bank_id (FK), review_text, rating, review_date, sentiment_label, sentiment_score, source, etc.
+- **Indexes**: Optimized for analytics queries (sentiment trends, temporal analysis)
+
+**Output**:
+- Database: `bank_reviews` (PostgreSQL)
+- Tables: `banks`, `reviews`
+- Validation queries for data integrity
+
+**Insights**:
+- Relational database structure supports complex analytics
+- Efficient batch processing for large datasets
+- Ready for BI tools and advanced analytics
+- Data integrity ensured through constraints and validation
+
+---
 
 ## Repository Structure
 
 ```
 Customer_Experience_Analysis/
-├── README.md
-├── requirements.txt
+├── README.md                    # This file
+├── requirements.txt             # Python dependencies
 ├── .gitignore
+├── database/
+│   ├── schema.sql              # Task 3: Database schema
+│   └── validation_queries.sql  # Task 3: Validation queries
 ├── src/
-│   ├── __init__.py
-│   ├── scraper.py          # Google Play Store review scraper
-│   ├── preprocessor.py     # Data cleaning and preprocessing
-│   └── main.py             # Main execution script
+│   ├── scraper.py              # Task 1: Data collection
+│   ├── preprocessor.py         # Task 1: Data preprocessing
+│   ├── main.py                 # Task 1: Main script
+│   ├── sentiment_analyzer.py   # Task 2: Sentiment analysis
+│   ├── thematic_analyzer.py    # Task 2: Theme identification
+│   ├── nlp_pipeline.py         # Task 2: NLP processing
+│   ├── task2_main.py           # Task 2: Main script
+│   ├── database_setup.py       # Task 3: Database setup
+│   ├── database_etl.py         # Task 3: ETL pipeline
+│   └── task3_main.py           # Task 3: Main script
 ├── data/
-│   ├── raw/                # Raw scraped data (gitignored)
-│   └── processed/          # Cleaned datasets (gitignored)
-└── logs/                   # Execution logs (gitignored)
+│   ├── raw/                    # Task 1: Raw scraped data
+│   ├── processed/              # Task 1: Cleaned data
+│   └── analyzed/               # Task 2: Analysis results
+└── logs/                       # Execution logs
 ```
 
-## Installation
+---
+
+## Quick Start
+
+### Prerequisites
+
+- Python 3.8+
+- PostgreSQL (for Task 3)
+- Virtual environment (recommended)
+
+### Installation
 
 1. **Clone the repository:**
    ```bash
@@ -56,138 +180,78 @@ Customer_Experience_Analysis/
    pip install -r requirements.txt
    ```
 
-## Data Collection Methodology
+### Running the Pipeline
 
-### Scraping Approach
-
-We use the `google-play-scraper` library to collect reviews from Google Play Store. The scraper:
-
-1. **Identifies App Packages:**
-   - Searches for each bank's mobile banking app using app names
-   - Extracts package IDs for accurate review collection
-
-2. **Review Collection:**
-   - Collects reviews with pagination support
-   - Targets minimum 400 reviews per bank (≥1,200 total)
-   - Captures: review text, rating, date, app name, source
-
-3. **Data Fields Collected:**
-   - `review`: Full review text
-   - `rating`: Star rating (1-5)
-   - `date`: Review submission date
-   - `app_name`: Name of the mobile banking app
-   - `bank`: Bank identifier (CBE, BOA, Dashen)
-   - `source`: Data source ("Google Play")
-
-### App Identification
-
-The scraper uses the following app identifiers:
-- **CBE**: "Commercial Bank of Ethiopia" / "CBE Mobile Banking"
-- **BOA**: "Bank of Abyssinia" / "BOA Mobile Banking"
-- **Dashen**: "Dashen Bank" / "Dashen Mobile Banking"
-
-## Preprocessing Steps
-
-### 1. Data Cleaning
-- **Duplicate Removal**: Identifies and removes duplicate reviews based on review text and date
-- **Missing Value Handling**: 
-  - Drops rows with missing review text (critical field)
-  - Fills missing ratings with median value
-  - Removes rows with missing dates
-
-### 2. Data Normalization
-- **Date Formatting**: Converts all dates to YYYY-MM-DD format
-- **Text Normalization**: 
-  - Removes extra whitespace
-  - Standardizes encoding (UTF-8)
-- **Rating Validation**: Ensures ratings are between 1-5
-
-### 3. Metadata Addition
-- Adds consistent metadata fields:
-  - `bank`: Bank identifier
-  - `source`: "Google Play"
-  - `collection_date`: Date when data was collected
-
-### 4. Data Quality Checks
-- Validates minimum review count (≥400 per bank)
-- Checks missing data percentage (<5%)
-- Ensures date format consistency
-- Validates rating ranges
-
-## Usage
-
-### Running the Complete Pipeline
-
-Execute the main script to run both scraping and preprocessing:
-
+**Task 1: Data Collection & Preprocessing**
 ```bash
 python src/main.py
 ```
 
-### Running Individual Components
-
-**Scraping only:**
+**Task 2: Sentiment & Thematic Analysis**
 ```bash
-python src/scraper.py
+python src/task2_main.py
 ```
 
-**Preprocessing only:**
+**Task 3: Database Setup & ETL**
 ```bash
-python src/preprocessor.py
+# Set PostgreSQL password
+$env:POSTGRES_PASSWORD="your_password"  # PowerShell
+# or
+export POSTGRES_PASSWORD="your_password"  # Linux/Mac
+
+# Run Task 3
+python src/task3_main.py
 ```
 
-## Output
+---
 
-### Raw Data
-- Location: `data/raw/reviews_raw_YYYYMMDD_HHMMSS.json`
-- Format: JSON with all scraped reviews
+## Key Findings & Insights
 
-### Processed Data
-- Location: `data/processed/reviews_cleaned_YYYYMMDD_HHMMSS.csv`
-- Format: CSV with standardized columns:
-  - `review`: Review text
-  - `rating`: Star rating (1-5)
-  - `date`: Review date (YYYY-MM-DD)
-  - `bank`: Bank name (CBE, BOA, Dashen)
-  - `app_name`: Mobile app name
-  - `source`: "Google Play"
-  - `collection_date`: Data collection timestamp
+### Data Collection (Task 1)
+- Successfully collected ≥1,200 reviews from three Ethiopian banks
+- High data quality with <5% missing values
+- Standardized format ready for analysis
 
-## Data Quality Metrics
+### Sentiment Analysis (Task 2)
+- Sentiment scores computed for ≥90% of reviews
+- Identified sentiment distribution patterns across banks
+- Correlation between ratings and sentiment scores
 
-The preprocessing script outputs:
-- Total reviews collected
-- Reviews per bank
-- Missing data percentage
-- Duplicate count
-- Final cleaned dataset size
+### Thematic Analysis (Task 2)
+- ≥3 themes identified per bank
+- Common themes: Account Access, Transaction Speed, UI/UX, Customer Support
+- Theme distribution helps prioritize improvement areas
 
-## KPIs
+### Database Storage (Task 3)
+- Relational database structure supports complex analytics
+- Efficient batch processing for large datasets
+- Ready for BI tools and advanced queries
 
-- ✅ **Total Reviews**: ≥1,200 reviews
-- ✅ **Missing Data**: <5% missing values
-- ✅ **Per Bank**: ≥400 reviews per bank
-- ✅ **Data Quality**: Clean, analysis-ready dataset
+---
 
-## Next Steps
+## Documentation
 
-This cleaned dataset supports:
-1. **Task 2**: Sentiment Analysis
-2. **Task 3**: Theme Extraction
-3. **Task 4**: Complaint Clustering
-4. **Task 5**: Database Ingestion (PostgreSQL)
+- **Task 1**: See `README.md` (this file) - Data Collection section
+- **Task 2**: See `TASK2_README.md` - Sentiment & Thematic Analysis
+- **Task 3**: See `TASK3_README.md` - PostgreSQL Database Setup
 
-## Troubleshooting
+---
 
-### Common Issues
+## KPIs Summary
 
-1. **Rate Limiting**: If scraping fails due to rate limits, the script includes delays between requests
-2. **App Not Found**: Verify app names/packages are correct for each bank
-3. **Missing Reviews**: Ensure sufficient reviews exist on Google Play Store
+| Task | KPI | Status |
+|------|-----|--------|
+| **Task 1** | ≥1,200 total reviews | ✅ Met |
+| **Task 1** | ≥400 reviews per bank | ✅ Met |
+| **Task 1** | <5% missing data | ✅ Met |
+| **Task 2** | ≥90% sentiment scores computed | ✅ Met |
+| **Task 2** | ≥3 themes per bank | ✅ Met |
+| **Task 2** | ≥400 reviews analyzed | ✅ Met |
+| **Task 3** | Working database + ETL script | ✅ Met |
+| **Task 3** | ≥1,000 review entries supported | ✅ Met |
+| **Task 3** | Schema file committed | ✅ Met |
 
-### Logs
-
-Check `logs/` directory for detailed execution logs and error messages.
+---
 
 ## Contributing
 
@@ -197,11 +261,14 @@ This project follows Omega Consultancy's data engineering standards:
 - Reproducible results
 - Version control best practices
 
+---
+
 ## License
 
 Proprietary - Omega Consultancy
 
+---
+
 ## Contact
 
 For questions or issues, contact the project team.
-
