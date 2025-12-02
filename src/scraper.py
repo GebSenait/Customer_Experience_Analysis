@@ -36,18 +36,71 @@ class PlayStoreScraper:
     APP_CONFIGS = {
         'CBE': {
             'app_name': 'Commercial Bank of Ethiopia',
-            'search_terms': ['Commercial Bank of Ethiopia', 'CBE Mobile', 'CBE Banking'],
-            'package_id': 'com.cbe.mobilebanking'  # May need verification
+            'search_terms': ['Commercial Bank of Ethiopia', 'CBE Mobile', 'CBE Banking', 'CBE'],
+            'package_id': 'com.cbe.mobilebanking',  # Primary - will try alternatives if fails
+            'alternative_packages': [
+                'com.cbe.mobile',
+                'com.cbe.banking',
+                'com.commercialbank.ethiopia',
+                'com.commercialbankethiopia.mobile',
+                'com.commercialbankethiopia.mobilebanking',
+                'et.com.cbe.mobile',
+                'com.cbe.ethiopia.mobile',
+                'com.cbe.cbemobile',
+                'com.cbe.mobilebanking.ethiopia',
+                'com.combanketh.mobile',
+                'com.cbe.digitalbanking',
+                'com.cbe.app',
+                'com.cbe.cbe',
+                'com.cbe.ethiopia',
+                'com.commercialbankethiopia',
+                'com.cbe.mbanking',
+                'com.cbe.digital',
+                'com.cbe.online',
+                'com.cbe.mobile.app',
+                'com.cbe.bank.mobile',
+                'com.cbe.bank.ethiopia',
+                'com.cbe.mobile.banking',
+                'com.cbe.mobilebanking.app',
+                'com.cbe.ethiopia.banking',
+                'com.cbe.ethiopia.mobilebanking'
+            ]
         },
         'BOA': {
             'app_name': 'Bank of Abyssinia',
             'search_terms': ['Bank of Abyssinia', 'BOA Mobile', 'BOA Banking'],
-            'package_id': 'com.bankofabyssinia.mobile'  # May need verification
+            'package_id': 'com.bankofabyssinia.mobile',  # This one works
+            'alternative_packages': []
         },
         'Dashen': {
             'app_name': 'Dashen Bank',
-            'search_terms': ['Dashen Bank', 'Dashen Mobile', 'Dashen Banking'],
-            'package_id': 'com.dashenbank.mobile'  # May need verification
+            'search_terms': ['Dashen Bank', 'Dashen Mobile', 'Dashen Banking', 'Dashen'],
+            'package_id': 'com.dashenbank.mobile',  # Primary - will try alternatives if fails
+            'alternative_packages': [
+                'com.dashenbank.mobilebanking',
+                'com.dashen.bank',
+                'com.dashen.bank.mobile',
+                'com.dashenbank.banking',
+                'com.dashen.mobile',
+                'et.com.dashenbank.mobile',
+                'com.dashenbank.digital',
+                'com.dashenbank.app',
+                'com.dashen.banking',
+                'com.dashenbank.ethiopia.mobile',
+                'com.dashen.mobilebanking',
+                'com.dashenbank.mobile.app',
+                'com.dashen.bank.app',
+                'com.dashenbank.superapp',
+                'com.dashen.superapp',
+                'com.dashenbank.dashen',
+                'com.dashen.dashen',
+                'com.dashenbank.ethiopia',
+                'com.dashen.ethiopia',
+                'com.dashenbank.mobile.banking',
+                'com.dashenbank.online',
+                'com.dashen.online',
+                'com.dashenbank.digital.banking'
+            ]
         }
     }
     
@@ -66,7 +119,7 @@ class PlayStoreScraper:
         
     def find_app_package(self, bank: str, search_term: str) -> Optional[str]:
         """
-        Attempt to find app package ID by searching
+        Attempt to find app package ID by trying multiple variations
         
         Args:
             bank: Bank identifier
@@ -76,35 +129,71 @@ class PlayStoreScraper:
             Package ID if found, None otherwise
         """
         try:
-            # Try using the configured package ID first
             config = self.APP_CONFIGS[bank]
-            package_id = config.get('package_id')
             
-            # Verify package exists by trying to fetch app info
-            try:
-                app_info = app(package_id, lang='en', country='et')
-                logger.info(f"Found app for {bank}: {app_info.get('title', 'Unknown')}")
-                return package_id
-            except Exception as e:
-                logger.warning(f"Package {package_id} not found for {bank}, trying search...")
-                
-            # If direct package fails, we'll need to use search
-            # Note: google-play-scraper doesn't have direct search, so we'll try common variations
-            common_packages = [
-                f"com.{bank.lower().replace(' ', '')}.mobilebanking",
-                f"com.{bank.lower().replace(' ', '')}.mobile",
-                f"com.{bank.lower().replace(' ', '')}.banking",
-                f"et.{bank.lower().replace(' ', '')}.mobile",
+            # Build list of packages to try
+            packages_to_try = [config.get('package_id')]
+            
+            # Add alternative packages if they exist
+            if 'alternative_packages' in config:
+                packages_to_try.extend(config['alternative_packages'])
+            
+            # Also try dynamic variations based on bank name
+            bank_lower = bank.lower().replace(' ', '').replace('of', '')
+            dynamic_packages = [
+                f"com.{bank_lower}.mobilebanking",
+                f"com.{bank_lower}.mobile",
+                f"com.{bank_lower}.banking",
+                f"et.com.{bank_lower}.mobile",
+                f"com.{bank_lower}.app",
             ]
             
-            for pkg in common_packages:
-                try:
-                    app_info = app(pkg, lang='en', country='et')
-                    logger.info(f"Found app for {bank} via search: {app_info.get('title', 'Unknown')}")
-                    return pkg
-                except:
+            # Add dynamic packages that aren't already in the list
+            for pkg in dynamic_packages:
+                if pkg not in packages_to_try:
+                    packages_to_try.append(pkg)
+            
+            logger.info(f"Trying {len(packages_to_try)} package ID variations for {bank}...")
+            
+            # Try each package ID with different country codes
+            countries_to_try = ['et', 'us', None]  # Try Ethiopia, US, and default
+            
+            for package_id in packages_to_try:
+                if not package_id:
                     continue
-                    
+                
+                for country in countries_to_try:
+                    try:
+                        logger.info(f"  Trying: {package_id} (country: {country or 'default'})")
+                        
+                        # Try with country if specified
+                        if country:
+                            app_info = app(package_id, lang='en', country=country)
+                        else:
+                            app_info = app(package_id, lang='en')
+                        
+                        app_title = app_info.get('title', 'Unknown')
+                        
+                        # Verify it's the right app by checking title
+                        if any(term.lower() in app_title.lower() for term in config['search_terms'] + [bank]):
+                            logger.info(f"[OK] Found app for {bank}: {app_title} (package: {package_id})")
+                            return package_id
+                        else:
+                            logger.warning(f"  Package {package_id} exists but title '{app_title}' doesn't match {bank}")
+                            # Still return it if it seems close (contains bank-related keywords)
+                            if any(keyword in app_title.lower() for keyword in ['bank', 'banking', 'mobile', 'cbe', 'dashen']):
+                                logger.info(f"  Package seems related, using: {package_id}")
+                                return package_id
+                        
+                        # If we got here with a valid app, break country loop
+                        break
+                        
+                    except Exception as e:
+                        # Package not found with this country, try next country
+                        continue
+            
+            logger.error(f"X Could not find valid package ID for {bank} after trying {len(packages_to_try)} variations")
+            logger.error(f"  Please manually find the package ID from Google Play Store and update APP_CONFIGS")
             return None
             
         except Exception as e:
@@ -183,16 +272,26 @@ class PlayStoreScraper:
         logger.info(f"Completed collection for {bank}: {len(all_reviews)} reviews")
         return all_reviews
     
-    def collect_all_reviews(self) -> Dict[str, List[Dict]]:
+    def collect_reviews_for_banks(self, banks: Optional[List[str]] = None) -> Dict[str, List[Dict]]:
         """
-        Collect reviews for all banks
+        Collect reviews for specified banks (or all if None)
+        
+        Args:
+            banks: List of bank identifiers to scrape. If None, scrapes all banks.
         
         Returns:
             Dictionary mapping bank names to review lists
         """
         all_data = {}
         
-        for bank, config in self.APP_CONFIGS.items():
+        banks_to_scrape = banks if banks else list(self.APP_CONFIGS.keys())
+        
+        for bank in banks_to_scrape:
+            if bank not in self.APP_CONFIGS:
+                logger.warning(f"Unknown bank: {bank}. Skipping...")
+                continue
+                
+            config = self.APP_CONFIGS[bank]
             logger.info(f"\n{'='*60}")
             logger.info(f"Processing {bank}")
             logger.info(f"{'='*60}")
@@ -214,6 +313,15 @@ class PlayStoreScraper:
             time.sleep(3)
         
         return all_data
+    
+    def collect_all_reviews(self) -> Dict[str, List[Dict]]:
+        """
+        Collect reviews for all banks
+        
+        Returns:
+            Dictionary mapping bank names to review lists
+        """
+        return self.collect_reviews_for_banks()
     
     def save_raw_data(self, data: Dict[str, List[Dict]], filename: Optional[str] = None):
         """
